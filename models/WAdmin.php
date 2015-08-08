@@ -16,9 +16,10 @@ use Yii;
  * @property string $email
  * @property string $mobile
  */
-class WAdmin extends \yii\db\ActiveRecord {
+class WAdmin extends \app\models\BaseModel {
 
     public $repassword;
+    public $verifycode;
 
     /**
      * @inheritdoc
@@ -37,7 +38,7 @@ class WAdmin extends \yii\db\ActiveRecord {
             [['username', 'password', 'repassword', 'group_id'], 'required'],
             ['username', 'unique', 'message' => '此用户名已被使用'],  
             [['repassword'], 'compare', 'compareAttribute' => 'password', 'operator' => '==', 'skipOnEmpty' => true],
-            ['email', 'match', 'pattern' => '/^([a-z0-9+_]|\\-|\\.)+@(([a-z0-9_]|\\-)+\\.)+[a-z]{2,6}\$/i', 'message' => '邮箱格式不正确'],
+            ['email', 'match', 'pattern' => '/^([0-9A-Za-z\\-_\\.]+)@([0-9a-z]+\\.[a-z]{2,3}(\\.[a-z]{2})?)$/i', 'message' => '邮箱格式不正确'],
             ['mobile', 'match', 'pattern' => '/^13[\d]{9}$|14^[0-9]\d{8}|^15[0-9]\d{8}$|^18[0-9]\d{8}$/', 'message' => '手机号码格式不正确'],
         ];
     }
@@ -120,27 +121,27 @@ class WAdmin extends \yii\db\ActiveRecord {
 
     }
 
-    /**
-     * 是否存在用户
-     * @param  [type]  $aid [description]
-     * @return boolean      [description]
-     */
-    public function isAdminExist($id) {
-        if(((int) $id) > 0) {
-            $className = self::className();
-            return $className::find()->andWhere(['id' => $id])->count('id');
-        }
-    }
 
     /**
-     * 获取指定用户信息
+     * 通过ID获取指定用户信息
      * @param  [type] $id     [description]
      * @param  string $select [description]
      * @return [type]         [description]
      */
-    public function getSingleAdminInfo($id, $select = '*') {
+    public function getSingleAdminInfoByID($id, $select = '*') {
         $className = self::className();
         return $className::find()->select($select)->where(['id' => $id])->one();
+    }
+
+    /**
+     * 通过指定条件获取用户信息
+     * @param  [type] $array  [description]
+     * @param  string $select [description]
+     * @return [type]         [description]
+     */
+    public function getSingleAdminInfo($array, $select = '*') {
+        $className = self::className();
+        return $className::find()->select($select)->where($array)->one();
     }
 
     /**
@@ -244,13 +245,13 @@ class WAdmin extends \yii\db\ActiveRecord {
         return $connection->createCommand($sql)->execute();       
     }
 
-    public function deleteAdminRecord($id) {
+    // public function deleteAdminRecord($id) {
         // $connection = Yii::$app->db;
         // $status = $connection->createCommand()->delete(self::tableName(), 'id in (' . $id . ')')->execute();
-        $className = self::className();       
-        $status = $className::deleteAll('id in (' . $id .')');
-         if($status)
-             return true;
-    }
+    //     $className = self::className();       
+    //     $status = $className::deleteAll('id in (' . $id .')');
+    //      if($status)
+    //          return true;
+    // }
 
 }

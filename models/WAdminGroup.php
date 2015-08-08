@@ -11,7 +11,7 @@ use Yii;
  * @property string $group_name
  * @property string $group_options
  */
-class WAdminGroup extends \yii\db\ActiveRecord
+class WAdminGroup extends \app\models\BaseModel
 {
     /**
      * @inheritdoc
@@ -85,27 +85,6 @@ class WAdminGroup extends \yii\db\ActiveRecord
     }
 
     /**
-     * 是否存在用户组
-     * @param  [type]  $aid [description]
-     * @return boolean      [description]
-     */
-    public function isAdminGroupExist($id) {
-        if(((int) $id) > 0) {
-            $className = self::className();
-            return $className::find()->andWhere(['id' => $id])->count('id');
-        }
-    }
-
-    public function deleteAdminGroupRecord($id) {
-        // $connection = Yii::$app->db;
-        // $status = $connection->createCommand()->delete(self::tableName(), 'id in (' . $id . ')')->execute();
-        $className = self::className();       
-        $status = $className::deleteAll('id in (' . $id .')');
-         if($status)
-             return true;
-    }
-
-    /**
      * 获取用户组权限
      * @return [type] [description]
      */
@@ -113,4 +92,5 @@ class WAdminGroup extends \yii\db\ActiveRecord
         $className = self::className();
         return $className::find()->where(['id' => $id])->one();
     }
+
 }

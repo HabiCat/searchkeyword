@@ -13,7 +13,7 @@ use Yii;
  * @property string $menu_acl
  * @property string $pid
  */
-class WMenu extends \yii\db\ActiveRecord
+class WMenu extends \app\models\BaseModel
 {
     /**
      * @inheritdoc
@@ -105,8 +105,13 @@ class WMenu extends \yii\db\ActiveRecord
             foreach($menus as $k => $v) {
                 if($v['pid'] == $pid) {
                     $v['menu_title'] = $flag . $v['menu_title'];
-                    $options[] = $v;
-                    $options = $this->getMenuListOptions($menus, $v['id'], $level + 1, $options);
+                    $options[] = $v;                   
+                    foreach($menus as $v2) {
+                        if($v2['pid'] == $v['id']) {
+                            $options = $this->getMenuListOptions($menus, $v['id'], $level + 1, $options);
+                            break;
+                        }
+                    }
                 }
             }
 
@@ -131,14 +136,15 @@ class WMenu extends \yii\db\ActiveRecord
         return array('data' => $res, 'count' => $connection->createCommand($sqlTwo)->queryOne());
     }
 
+
     /**
-     * 判断有无此菜单
-     * @return boolean [description]
+     * 通过指定条件获取菜单信息
+     * @param  [type] $array  [description]
+     * @param  string $select [description]
+     * @return [type]         [description]
      */
-    public function isMenuExist($id) {
-        if(((int) $id) > 0) {
-            $className = self::className();
-            return $className::find()->andWhere(['id' => $id])->count('id');
-        }
+    public function getMeunByIf($where, $select = '*') {
+        $className = self::className();
+        return $className::find()->select($select)->where($where)->all();
     }
 }
