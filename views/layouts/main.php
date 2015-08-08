@@ -1,14 +1,6 @@
 <?php
-use yii\helpers\Html;
-use yii\bootstrap\Nav;
-use yii\bootstrap\NavBar;
-use yii\widgets\Breadcrumbs;
-use app\assets\AppAsset;
+//use yii\web\Session;
 
-/* @var $this \yii\web\View */
-/* @var $content string */
-
-AppAsset::register($this);
 ?>
 <!DOCTYPE html>
 <html class="no-js">   
@@ -39,16 +31,16 @@ AppAsset::register($this);
             <div class="nav-collapse collapse">
                 <ul class="nav pull-right">
                     <li class="dropdown">
-                        <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown"> <i class="icon-user"></i> Vincent Gabriel <i class="caret"></i>
+                        <a href="#" role="button" class="dropdown-toggle" data-toggle="dropdown"> <i class="icon-user"></i> <?php echo \Yii::$app->session['accountName'] ?> <i class="caret"></i>
 
                         </a>
                         <ul class="dropdown-menu">
                             <li>
-                                <a tabindex="-1" href="#">Profile</a>
+                                <a tabindex="-1" href="#">个人资料</a>
                             </li>
                             <li class="divider"></li>
                             <li>
-                                <a tabindex="-1" href="login.html">Logout</a>
+                                <a tabindex="-1" href="<?= \Yii::$app->urlManager->createUrl(['iadmin/access/logout']) ?>">退出</a>
                             </li>
                         </ul>
                     </li>
@@ -58,6 +50,7 @@ AppAsset::register($this);
                         <a href="#">Dashboard</a>
                     </li>
                     <?php 
+                        
                         if(isset($this->context->_menus) && !empty($this->context->_menus)) {
                             foreach($this->context->_menus as $menu) {
                         

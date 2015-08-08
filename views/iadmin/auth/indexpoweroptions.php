@@ -16,14 +16,15 @@
                                 <div class="span12">
                                    <div class="table-toolbar">
                                       <div class="btn-group">
-                                         <a href="<?php echo Yii::$app->urlManager->createUrl('iadmin/auth/create') ?>"><button class="btn btn-success">添加用户组<i class="icon-plus icon-white"></i></button></a>
+                                         <a href="<?php echo Yii::$app->urlManager->createUrl('iadmin/auth/create-power-options') ?>"><button class="btn btn-success">添加用户组<i class="icon-plus icon-white"></i></button></a>
                                       </div>
                                    </div>
                                     <div class="row">
                                         <div class="span6">
                                             <div id="example2_length" class="dataTables_length">
                                                 <label><select size="1" name="pageSize" id="pageSize" aria-controls="example2">
-                                                    <option value="10" selected="selected">10</option>
+                                                <option value="5" selected="selected">5</option>
+                                                    <option value="10">10</option>
                                                     <option value="25">25</option>
                                                     <option value="50">50</option>
                                                     <option value="100">100</option>
@@ -38,7 +39,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    <form action="<?php echo Yii::$app->urlManager->createUrl('iadmin/auth/delete') ?>" name="form2" method="post">
+                                    <form action="<?php echo Yii::$app->urlManager->createUrl('iadmin/auth/delete-power-options') ?>" name="form2" method="post">
                                     <table cellpadding="0" cellspacing="0" border="0" class="table table-striped table-bordered">
                                         <thead>
                                             <tr>
@@ -92,7 +93,6 @@
                 </div>
             </div>
         
-        <script src="/static/iadmin/assets/DT_bootstrap.js"></script>
         <script type="text/javascript">
         $(function () {
             $('#all').on('click', function() {

@@ -66,9 +66,6 @@
 		    </div>
                      <!-- /validation -->
 
-
-
-
                 </div>
             </div>
 
