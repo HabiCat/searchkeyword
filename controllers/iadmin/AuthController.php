@@ -88,7 +88,7 @@ class AuthController extends AdminBaseController {
 			}	
 		}
 
-		if($adminGroupModel->isAdminGroupExist($gid)) {
+		if($adminGroupModel->isExist(['id' => $gid], 'id')) {
 			return $this->render('edit', [
 				'model' => $adminGroupModel,
 			]);				
@@ -103,20 +103,20 @@ class AuthController extends AdminBaseController {
 	 */
 	public function actionDelete() {
 		$adminModel = new \app\models\WAdminGroup;
+		$backUrl = \Yii::$app->urlManager->createUrl('iadmin/auth/index');
 		if(\Yii::$app->request->isGet) {
 			$ids = $this->_getParam('id');
-
 		} elseif(\Yii::$app->request->isPost) {
 			$ids = $this->_getPost('ids');
 			$ids = implode(',', $ids);
 		}
 
-		$backUrl = \Yii::$app->urlManager->createUrl('iadmin/auth/index');
-		if($adminModel->deleteAdminGroupRecord($ids)) {
+		
+		if($adminModel->deleteRecord('id in (' . $ids .')')) {
 			\app\common\XUtils::message('success', '用户组删除成功！', $backUrl);
 		} 
 
-		\app\common\XUtils::message('success', '用户信息组失败，请重试！', $backUrl);
+		\app\common\XUtils::message('error', '用户信息组失败，请重试！', $backUrl);
 	}
 
 	public function actionAssign() {
@@ -143,7 +143,7 @@ class AuthController extends AdminBaseController {
 		$id = $this->_getPost('id');
 		$backUrl = \Yii::$app->urlManager->createUrl(['iadmin/auth/assign', 'id' => $id]);
 		$adminGroupModel = new \app\models\WAdminGroup;
-		if($id > 0 && $adminGroupModel->isAdminGroupExist($id)) {
+		if($id > 0 && $adminGroupModel->isExist(['id' => $id], 'id')) {
 			$powers = $this->_getPost('Power');
 			if(!empty($powers)) {
 				$array['group_options'] = implode(',', $powers);
@@ -165,7 +165,7 @@ class AuthController extends AdminBaseController {
 		$currentPage = $this->_getPost('page') ? $this->_getPost('page') : 1;
 		$pageSize = $this->_getPost('pageSize') ? $this->_getPost('pageSize') : 10;
 
-		$where = 'id <> 1';
+		$where = '1';
 		if($this->_getPost('searchName')) {
 			$where .= ' and ' . $this->buildQuery(['menu_title' => $this->_getPost('searchName')], 'and');
 		}
@@ -208,15 +208,22 @@ class AuthController extends AdminBaseController {
 		if(\Yii::$app->request->isPost) {
 			$backUrl = \Yii::$app->urlManager->createUrl('iadmin/auth/create-power-options');
 			$getPost = $this->_getPost('WMenu');
+			if($this->isTwoLayersOfSuper($getPost['pid']) > 1) {
+				\app\common\XUtils::message('error', '暂不支持添加三级及以上菜单！', $backUrl);
+			}
+
 			$getPost['menu_acl'] = str_replace('/', '_', $getPost['menu_url']);
+
 			if($this->buildInsert($menuModel, $getPost)) { 
 				\app\common\XUtils::message('success', '菜单添加成功！', $backUrl);
 			}
 		}
 
+		$groupList = $this->menusDropDownList($menuModel);
+		array_unshift($groupList, '顶级分类');
 		return $this->render('createpoweroptions', [
 			'model' => $menuModel,
-			'groupList' => $this->menusDropDownList($menuModel),
+			'groupList' => $groupList,
 		]);
 	}
 
@@ -233,23 +240,53 @@ class AuthController extends AdminBaseController {
 			}	
 		}
 
-		if($menuModel->isMenuExist($id)) {
+
+		if($menuModel->isExist(['id' => $id], 'id')) {
+			$groupList = $this->menusDropDownList($menuModel);
+			array_unshift($groupList, '顶级分类');
 			return $this->render('editpoweroptions', [
 				'model' => $menuModel,
-				'groupList' => $this->menusDropDownList($menuModel),
+				'groupList' => $groupList,
 			]);				
 		}
 
 		\app\models\XUtils::message('error', '无此菜单信息', \Yii::$app->urlManager->createUrl('iadmin/auth/index-power-options'));	
 	}
 
+	/**
+	 * 有问题 待解决
+	 * @return [type] [description]
+	 */
+	public function actionDeletePowerOptions() {
+		$adminModel = new \app\models\WAdmin;
+		$backUrl = \Yii::$app->urlManager->createUrl('iadmin/auth/index-power-options');
+		if(\Yii::$app->request->isGet) {
+			$ids = $this->_getParam('id');
+			if(!$adminModel->isExist(['id' => $ids], 'id')) {
+				$this->redirect($backUrl);
+			}
+
+		} elseif(\Yii::$app->request->isPost) {
+			$ids = $this->_getPost('ids');
+			$ids = implode(',', $ids);
+		}
+
+		if($adminModel->deleteRecord('id in (' . $ids .')')) {
+			\app\common\XUtils::message('success', '用户信息删除成功！', $backUrl);
+		} 
+
+		\app\common\XUtils::message('error', '用户信息删除失败，请重试！', $backUrl);
+	}
+
 	protected function menusDropDownList($model) {
 		$allMenus = $model->getMenuListOptions($model->getAllMenus('type <> 1'));
 		$groupList = array();
 		foreach($allMenus as $value) {
-			$groupList[] = $value['menu_title'];
+			$groupList[$value['id']] = $value['menu_title'];
 		}
 
 		return $groupList;
 	}
+
+
 }

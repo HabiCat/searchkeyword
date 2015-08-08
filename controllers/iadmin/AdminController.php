@@ -16,7 +16,6 @@ class AdminController extends AdminBaseController {
 	 * @return [type] [description]
 	 */
 	public function actionIndex() {
-
 		$model = new \app\models\WAdmin;
 		$currentPage = $this->_getPost('page') ? $this->_getPost('page') : 1;
 		$pageSize = $this->_getPost('pageSize') ? $this->_getPost('pageSize') : 10;
@@ -47,8 +46,8 @@ class AdminController extends AdminBaseController {
                 $html .= '<td>' . $value['group_name'] . '</td>';
                 $html .= '<td class="center">' . $value['last_login_time'] . '</td>';
                 $html .= '<td class="center">';
-                $html .= '<a href="' . \Yii::$app->urlManager->createUrl('iadmin/admin/create', ['id' => $value['id']]) . '">编辑</a>';
-                $html .= '<a href="' . \Yii::$app->urlManager->createUrl('iadmin/admin/delete', ['id' => $value['id']]) . '">删除</a>';
+                $html .= '<a href="' . \Yii::$app->urlManager->createUrl(['iadmin/admin/edit','id' => $value['id']]) . '">编辑</a>';
+                $html .= '<a href="' . \Yii::$app->urlManager->createUrl(['iadmin/admin/delete', 'id' => $value['id']]) . '">删除</a>';
                 $html .= '</td> '; 
 			}
 
@@ -104,8 +103,8 @@ class AdminController extends AdminBaseController {
 			}	
 		}
 
-		if($adminModel->isAdminExist($aid)) {
-			$data = $adminModel->getSingleAdminInfo($aid);
+		if($adminModel->isExist(['id' => $aid], 'id')) {
+			$data = $adminModel->getSingleAdminInfoByID($aid);
 			$adminModel->password = '';
 			if(!empty($data)) {
 				return $this->render('edit', [
@@ -122,20 +121,20 @@ class AdminController extends AdminBaseController {
 	 */
 	public function actionDelete() {
 		$adminModel = new \app\models\WAdmin;
+		$backUrl = \Yii::$app->urlManager->createUrl('iadmin/admin/index');
 		if(\Yii::$app->request->isGet) {
 			$ids = $this->_getParam('id');
-			// if(!$adminModel->isAdminExist($ids)) {
-				// $this->redirect(\Yii::$app->urlManager->createUrl('iadmin/admin/index'));
-				// echo '222';
-			// }
+			if(!$adminModel->isExist(['id' => $ids], 'id')) {
+				$this->redirect($backUrl);
+			}
 
 		} elseif(\Yii::$app->request->isPost) {
 			$ids = $this->_getPost('ids');
 			$ids = implode(',', $ids);
 		}
 
-		$backUrl = \Yii::$app->urlManager->createUrl('iadmin/admin/index');
-		if($adminModel->deleteAdminRecord($ids)) {
+		
+		if($adminModel->deleteRecord('id in (' . $ids .')')) {
 			\app\common\XUtils::message('success', '用户信息删除成功！', $backUrl);
 		} 
 
