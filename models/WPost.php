@@ -80,10 +80,6 @@ class WPost extends \app\models\BaseModel
         $this->createtime = time();
         
         return true;
-
-        // $fp = fopen(ROOT_PATH . '/sql.txt', 'w');
-        // fwrite($fp, $this->createCommand()->getRawSql());//
-        // fclose($fp);
     }
 
     // public function afterSave($insert, $changedAttributes) {
@@ -92,7 +88,15 @@ class WPost extends \app\models\BaseModel
 
 
     public function getPostListByPage($start, $pagesize, $where = 1) {
-        $list = self::find()->select('id, subject, keywords, url_code')->where($where)->orderBy('createtime desc, id desc')->limit($pagesize)->offset($start)->all();
-        return ['list' => $list, 'n' => self::find()->where($where)->count('id')];
+        if($where == 1 || $where == '') {
+            return false;
+        } else {
+            $list = self::find()->select('id, subject, keywords, url_code')->where($where)->orderBy('createtime desc, id desc')->limit($pagesize)->offset($start)->all();
+            return ['list' => $list, 'n' => self::find()->where($where)->count('id')];
+        }
+    }
+
+    public function getRealUrl($code) {
+        return self::find()->select('url')->where('url_code="' . $code . '"')->one();
     }
 }

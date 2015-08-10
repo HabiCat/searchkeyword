@@ -253,5 +253,22 @@ class WAdmin extends \app\models\BaseModel {
     //      if($status)
     //          return true;
     // }
+    // 
+    
+    /**
+     * 通过第二身份获取用户信息
+     * @param  [type] $identifier [description]
+     * @return [type]             [description]
+     */
+    public function getAdminInfoByIToken($identifier) {
+         return self::find()->select('id, username, token, timeout')->andWhere(['identifier' => $identifier])->one();
+    }
 
+    public function updateRandom($chain) {
+        list($uid, $identifier, $token, $timeout) = explode(':', $chain);
+        $sql = "UPDATE " . self::tableName() . " SET identifier='$identifier', token='$token', timeout='$timeout' WHERE id=" . $uid;
+        $connection = Yii::$app->db;
+        $command = $connection->createCommand($sql);
+        return $command->execute();
+    }
 }
