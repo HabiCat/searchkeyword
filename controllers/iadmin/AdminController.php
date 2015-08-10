@@ -16,6 +16,8 @@ class AdminController extends AdminBaseController {
 	 * @return [type] [description]
 	 */
 	public function actionIndex() {
+		print_r($this->_cookiesGet('auth'));
+		
 		$model = new \app\models\WAdmin;
 		$currentPage = $this->_getPost('page') ? $this->_getPost('page') : 1;
 		$pageSize = $this->_getPost('pageSize') ? $this->_getPost('pageSize') : 10;
