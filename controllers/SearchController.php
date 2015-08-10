@@ -6,7 +6,7 @@ use Yii;
 class SearchController extends \app\common\CController {
 	public $esClient;
 	public $index = 'word';
-	public $type = 'post_2';
+	public $type = 'post_3';
 
 	public function init() {
 		// require_once(ROOT_PATH . '/api/sphinxapi.php');
