@@ -1,7 +1,9 @@
 <section>
 	<style type="text/css">
 		ul, li { list-style: none; }
-		.pager li { float: left; }
+		.pager li { float: left; padding: 5px;}
+		.pager .active { }
+		.pager .active a {font-size: 22px; color: red;}
 	</style>
 	<div class="search">
 		<?php 
@@ -14,7 +16,8 @@
 		
         <?= $form->field($model, 'searchName',[
             'template' => '<div class="control-group">{label}<div class="controls">{input}{error}</div></div>',
-        ])->textInput(['class' => 'input-xlarge focused', 'value' => $searchName])->label('关键字<span class="required">*</span>') ?>
+        ])->textInput(['class' => 'input-xlarge focused','value' => $searchName])->label('关键字<span class="required">*</span>') ?>
+
 		<?= \yii\helpers\Html::submitButton('搜索', ['class'=> 'btn btn-primary']) ;?>
 
 		<?= \yii\helpers\Html::hiddenInput('page', 1) ;?>
@@ -23,7 +26,10 @@
 	</div>
 	<ul>
 		<?php foreach($data as $value): ?>
-			<li><span><?= $value['_source']['id'] ?></span>&nbsp;&nbsp;<a href="<?= $value['_source']['url_code'] ?>"><?= $value['_source']['subject'] ?></a></li>
+			<li>
+				<span><?= $value['id'] ?></span>&nbsp;&nbsp;<a href="<?= \Yii::$app->urlManager->createUrl(['post/jump-url', 'url' => $value['url_code']]) ?>"><?= $value['excerpts'][0] ?></a>
+				&nbsp;&nbsp;<span><?= $value['excerpts'][1] ?></span>
+			</li>
 		<?php endforeach; ?>
 	</ul>
 	<div class="row">
