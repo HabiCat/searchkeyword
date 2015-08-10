@@ -20,29 +20,24 @@ class AdminBaseController extends CController {
 	protected $_urlFlag;
 	public $_menus;
 
-	public function init () {
-		parent::init();
-
-		$this->_sessionSet('account', 'test');
-		$_account = $this->_sessionGet('account');
-		$this->_sessionSet('aid', 2);
-		$_account = $this->_sessionGet('aid');
-
+	public function beforeAction($action) {
+		parent::beforeAction($action);
+		$this->verifyUser();
+		$this->verifyAccess();
 		$this->_menus = $this->getBaseFilterMenus();
+		return true;
 	}
 
 	/**
 	 * 设置Url规则
 	 */
 	protected function setUrlFlag() {
-		$controller = $this->id;
-		$action = $this->action->id;
-		// if(preg_match('/iadmin/i', $controller)) {
-		// 	$controller = str_replace('iadmin/', '', $controller);
+		$controller = Yii::$app->controller->id;
+		$action = Yii::$app->controller->action->id;
+		// if(preg_match('/(\-|\/)/', $action)) {
+		$controller = str_replace('/', '_', $controller);
+		$action = str_replace('-', '_', $action);
 		// }
-		if(preg_match('/(\-|\/)/', $action)) {
-			$action = str_replace('-', '_', $action);
-		}
 
 		return $controller . '_' . $action;	
 	}
@@ -99,10 +94,11 @@ class AdminBaseController extends CController {
 		$all_menus = $this->getAllMenus();
 
 		$connection = Yii::$app->db;
-		$sql = 'select g.group_options from w_admin_group as g where g.id = (select a.group_id from w_admin as a where a.id = ' . $this->_sessionGet('aid') . ')';
+		$sql = 'select g.group_options from w_admin_group as g where g.id = (select a.group_id from w_admin as a where a.id = ' . $this->_sessionGet('accountID') . ')';
 		$ids =  $connection->createCommand($sql)->queryOne();
 
-		$sql = 'select m.menu_acl from w_menu as m where m.id in (' . $ids['group_options'] . ') order by m.id asc';
+		$where = $ids['group_options'] == 'administrator' ? '' : 'where m.id in (' . $ids['group_options'] . ')';
+		$sql = 'select m.menu_acl from w_menu as m ' . $where . ' order by m.id asc';
 		$acls = $connection->createCommand($sql)->queryAll();
 
 		$filter_acls = array();
@@ -147,5 +143,54 @@ class AdminBaseController extends CController {
 		return $filter_menus;	
 	}	
 
+    // 验证用户
+    public function verifyUser() {       
+        if(!$this->_sessionGet('accountID')) {
+        	if($this->_cookiesGet('auth')) {
+        		list($identifier, $token) = explode(':', mysql_real_escape_string($this->_cookiesGet('auth')));
+        		$now = time();
+        		$adminModel = new \app\models\WAdmin;
+        		$userinfo = $adminModel->getAdminInfoByIdentifier($identifier);
+        		if(is_object($userinfo)) {
+        			if($userinfo->token != $token) {
+        				\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
+        			} elseif($now > $userinfo->timeout) {
+        				\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
+        			} elseif($identifier == md5(salt . md5($userinfo->username . Yii::$app->params['salt']))) {
+        				\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
+        			} else {
+                   		$this->_sessionSet('accountID', $userinfo->id);
+                		$this->_sessionSet('accountName', $userinfo->username);     				
+        			}
+
+        		}
+        	} else {
+        		\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
+        	}
+        }
+    }
+
+    // 验证权限
+    public function verifyAccess() {
+    	$adminGroupModel = new \app\models\WAdminGroup;
+    	$menuModel = new \app\models\WMenu;
+        $urlRule = $this->setUrlFlag();
+        $groupIds = $adminGroupModel->getUserPower($this->_sessionGet('accountID'));
+
+        if($groupIds->group_options != 'administrator' && $groupIds->group_options != '') {
+        	$rulesArray = $menuModel->getMeunByIf('id in (' . $groupIds->group_options . ')', 'menu_acl');
+        	
+        	$rules = array();
+        	foreach($rulesArray as $val) {
+        		$rules[] = $val->menu_acl;
+        	}
+
+        	$rules = implode(',', $rules) . ',iadmin_default,iadmin_default_index';
+
+        	if(strpos($rules, $urlRule) == false) {
+        		\app\common\XUtils::message('error', '您没有操作权限', \Yii::$app->urlManager->createUrl(['iadmin/admin/index']));
+        	}
+        }
+    }
 
 }

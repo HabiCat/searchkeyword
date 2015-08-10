@@ -14,11 +14,13 @@ use yii\web\Cookie;
 
 class CController extends Controller {
 
+    public $layout = 'front';
     public $enableCsrfValidation = false;
     protected $_gets;
     protected $_baseUrl;
     protected $_session;
     protected $_cookies;
+
 
     /**
 	 * 初始化
