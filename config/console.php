@@ -25,7 +25,16 @@ return [
                 ],
             ],
         ],
-        'db' => $db,
+        'request' => [
+            'enableCookieValidation' => true,
+            'enableCsrfValidation' => true,
+            'cookieValidationKey' => '123456',
+            'csrfCookie' => [
+                'path' => '/',
+                'httpOnly' => true,
+            ],
+        ],
+        'db' => $db, 
     ],
     'params' => $params,
 ];
