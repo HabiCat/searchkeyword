@@ -7,11 +7,15 @@ class PostController extends \app\common\CController {
 	// public $esClient;
 	// public $index = 'word';
 	// public $type = 'post_3';
+	public $cl;
 
 	public function init() {
 		// require_once(ROOT_PATH . '/api/sphinxapi.php');
 		// require_once(ROOT_PATH . '/api/elasticsearch-php/vendor/autoload.php'); 
 		// $this->createEsClient('localhost', 9200);
+		require_once(ROOT_PATH . '/api/SphinxClient.php');
+		$this->cl = new \api\SphinxClient();
+		$this->cl->SetServer ('127.0.0.1', 9312);
 	}
 
 	// public function createEsClient($host, $port) {
@@ -51,17 +55,15 @@ class PostController extends \app\common\CController {
 		$start = ($page - 1) * $pageSize;
 		$postModel = new \app\models\WPost;
 
-		require_once(ROOT_PATH . '/api/SphinxClient.php');
-		$cl = new \api\SphinxClient();
-		$cl->SetServer ('127.0.0.1', 9312);
-		$cl->SetArrayResult (true);
-		$cl->setMatchMode(SPH_MATCH_ANY);
-		$cl->setMaxQueryTime(5);
+		$this->cl->SetArrayResult (true);
+		$this->cl->setMatchMode(SPH_MATCH_ANY);
+		$this->cl->setMaxQueryTime(5);
 
-		$cl->SetSortMode(SPH_SORT_ATTR_DESC, "createtime");
-		$cl->SetLimits($start, $pageSize);
-		$res = $cl->Query($keywords, "post,post_increment");
-
+		$this->cl->SetSortMode(SPH_SORT_ATTR_DESC, "createtime");
+		$this->cl->SetLimits($start, $pageSize);
+		$this->cl->SetFilterRange('createtime', 1, time());
+		$res = $this->cl->Query($keywords, "post,post_increment");
+		$this->dump($res);
 		$ids = array();
 		$where = '';
 		if(isset($res['matches'])) {
@@ -84,11 +86,11 @@ class PostController extends \app\common\CController {
 					if($k == 'subject' || $k == 'keywords') {
 						$o[$k] = $v;
 					}	
-
-					if(count($o) == 2) {
-						$datalist[$key]['excerpts'] = $cl->BuildExcerpts($o, 'post', $keywords, $opts);
-					}
 					$datalist[$key][$k] = $v;
+				}
+
+				if(count($o) == 2) {
+					$datalist[$key]['excerpts'] = $this->cl->BuildExcerpts($o, 'post', $keywords, $opts);
 				}
 			}		
 		}
@@ -170,6 +172,48 @@ class PostController extends \app\common\CController {
 		return $this->render('create', [
 			'model' => $postModel,
 		]);
+	}
+
+	public function actionUpdate() {
+		$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
+		$postModel = $id ? \app\models\WPost::findOne($id) : '';
+
+		if(Yii::$app->request->isPost) {
+			if($id) {
+				$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
+				$getPost['id'] = $id;
+				$postModel->attributes = $getPost;
+				if($postModel->save()) {
+					exit(json_encode(['status' => 1, 'msg' => '修改成功']));
+				} else {
+					exit(json_encode(['status' => -1, 'msg' => $postModel->getErrors()]));
+				}			
+			}
+
+		}
+
+		if($id) {
+			return $this->render('update', [
+				'model' => $postModel,
+				'id' => $id,
+			]);			
+		} else {
+			exit('此记录不存在');
+		}
+
+	}
+
+	public function actionDelete() {
+		$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
+		if($id) {
+			$postModel = new \app\models\WPost;
+			if($postModel->deleteRecord('id=' . $id)) {
+				$this->cl->updateAttributes('post, post_increment',array('createtime'),array($id=>array(0)));
+				exit(json_encode(['status' => 1, 'msg' => '删除成功']));
+			} else {
+				exit(json_encode(['status' => -1, 'msg' => '删除失败']));
+			}
+		}
 	}
 
 	// public function actionUpdate() {
