@@ -24,7 +24,7 @@ class BaseModel extends \yii\db\ActiveRecord {
 	 */
 	public function deleteRecord($where) {
         $className = self::className();
-        $status = '\\' . $className::deleteAll($where);
+        $status = $className::deleteAll($where);
          if($status)
              return true;
 	}

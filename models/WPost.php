@@ -77,7 +77,8 @@ class WPost extends \app\models\BaseModel
         
         $this->url_code = \app\common\XUtils::shorturl($this->url);
         $this->description = \app\common\XUtils::ihtmlspecialchars($this->description);
-        $this->createtime = time();
+        !$this->id && $this->createtime = time();
+        $this->updatetime = time();
         
         return true;
     }

@@ -260,7 +260,7 @@ class WAdmin extends \app\models\BaseModel {
      * @param  [type] $identifier [description]
      * @return [type]             [description]
      */
-    public function getAdminInfoByIToken($identifier) {
+    public function getAdminInfoByIdentifier($identifier) {
          return self::find()->select('id, username, token, timeout')->andWhere(['identifier' => $identifier])->one();
     }
 
