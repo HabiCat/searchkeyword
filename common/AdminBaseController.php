@@ -144,19 +144,20 @@ class AdminBaseController extends CController {
 	}	
 
     // 验证用户
-    public function verifyUser() {       
+    public function verifyUser() {      
         if(!$this->_sessionGet('accountID')) {
-        	if($this->_cookiesGet('auth')) {
-        		list($identifier, $token) = explode(':', mysql_real_escape_string($this->_cookiesGet('auth')));
+        	if($_COOKIE['auth']) {
+        		list($identifier, $token) = explode(':', $_COOKIE['auth']);
         		$now = time();
         		$adminModel = new \app\models\WAdmin;
         		$userinfo = $adminModel->getAdminInfoByIdentifier($identifier);
+
         		if(is_object($userinfo)) {
         			if($userinfo->token != $token) {
         				\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
         			} elseif($now > $userinfo->timeout) {
         				\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
-        			} elseif($identifier == md5(salt . md5($userinfo->username . Yii::$app->params['salt']))) {
+        			} elseif($identifier != md5(\Yii::$app->params['salt'] . md5($userinfo->username . \Yii::$app->params['salt']))) {
         				\app\common\XUtils::message('error', '请重新登陆', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
         			} else {
                    		$this->_sessionSet('accountID', $userinfo->id);

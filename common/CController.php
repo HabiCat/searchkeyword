@@ -19,7 +19,6 @@ class CController extends Controller {
     protected $_gets;
     protected $_baseUrl;
     protected $_session;
-    protected $_cookies;
 
 
     /**
@@ -28,7 +27,6 @@ class CController extends Controller {
     public function init () {
         $this->_session = Yii::$app->session;
         $this->_session->open();
-        $this->_cookies = Yii::$app->response->cookies;
         $this->_gets = Yii::$app->request;
         $this->_baseUrl = Yii::$app->getUrlManager()->getBaseUrl();
     }
@@ -45,15 +43,19 @@ class CController extends Controller {
      */
     protected function _cookiesSet ($name = '', $value = '', $expire = 3600, $path = '', $domain = '', $secure = false)
     {
-        $cookieSet = new Cookie(array(
-        	'name' => $name, 
-        	'value' => $value,
-        	'expire' => $secure,
-        	'path' => $path,
-        	'domain' => $domain,
-        	'secure' => $secure,
-        ));
-        $this->_cookies->add($cookieSet);
+        if(!$name || !$value) {
+            return null;
+        }
+
+        $info['name'] = $name;
+        $info['value'] = $value;
+        $info['expire'] = $expire ? $expire : 3600;
+        $path && $info['path'] = $path;
+        $domain && $info['path'] = $domain;
+        $secure && $info['secure'] = $secure;
+
+        $cookieSet = new Cookie($info);
+        Yii::$app->response->cookies->add($cookieSet);
     }
 
     /**
@@ -62,14 +64,13 @@ class CController extends Controller {
      * @param  string  $value [description]
      * @return [type]         [description]
      */
-    protected function _cookiesGet ($name, $value = '') {
-
-    	if($value)
-    		$data = $this->_cookies->get($name, $value);
-    	else
-    		$data = $this->_cookies->get($name);
-
-        return $data;
+    protected function _cookiesGet ($name, $value = null) {
+        if($value == null) {
+            return Yii::$app->request->cookies->getValue($name);
+        } else {
+            return Yii::$app->request->cookies->get($name, $value);
+        }
+        
     }
 
     /**
@@ -78,7 +79,16 @@ class CController extends Controller {
      * @return [type]       [description]
      */
     protected function _cookiesRemove ($name){
-		$this->_cookies->remove($name);
+		Yii::$app->response->cookies->remove($name);
+    }
+
+    /**
+     * 判断cookie是否存在
+     * @param  [type]  $name [description]
+     * @return boolean       [description]
+     */
+    protected function _hasCookies($name) {
+        return Yii::$app->request->cookies->has($name);
     }
 
     /**
