@@ -29,6 +29,8 @@
 			<li>
 				<span><?= $value['id'] ?></span>&nbsp;&nbsp;<a href="<?= \Yii::$app->urlManager->createUrl(['post/jump-url', 'url' => $value['url_code']]) ?>"><?= $value['excerpts'][0] ?></a>
 				&nbsp;&nbsp;<span><?= $value['excerpts'][1] ?></span>
+				&nbsp;&nbsp;<a href="<?= \Yii::$app->urlManager->createUrl(['post/update', 'id' => $value['id']]) ?>">编辑</a>
+				&nbsp;&nbsp;<a class="delBtn" data-id="<?= $value['id'] ?>" href="#">删除</a>
 			</li>
 		<?php endforeach; ?>
 	</ul>
@@ -48,6 +50,20 @@
 		$('#pager').children().find('a').on('click', function () {
 			$("input[name='page']").prop('value', parseInt($(this).attr('data-page')) + 1);
 			$('#postSearchForm').submit();
+			return false;
+		});
+
+		$('.delBtn').on('click', function () {
+			$.post('index.php?r=post/delete', {id:$(this).attr('data-id')}, function (msg) {
+                var jsonStr = $.parseJSON(msg);
+                if(jsonStr['status'] == 1) {
+                    alert(jsonStr.msg);
+                    window.location.reload();
+                } else {
+					alert(jsonStr.msg);               
+                }
+			});
+
 			return false;
 		});
 	}); 
