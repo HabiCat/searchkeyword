@@ -13,7 +13,6 @@ class AccessController extends \app\common\CController {
 	}
 
 	public function actionLogin() {
-		
 		if($this->_sessionGet('accountID')) {
 			\app\common\XUtils::message('success', '您已经登录，无需重复登录', \Yii::$app->urlManager->createUrl(['iadmin/admin/index']));
 		}
@@ -40,12 +39,15 @@ class AccessController extends \app\common\CController {
 
 			$userinfo = $this->adminModel->getSingleAdminInfo(['username' => $getPost['username'], 'password' => md5($getPost['password'])]);
 			if(!empty($userinfo)) {
-				// $this->_sessionSet('accountID', $userinfo->id);
-				// $this->_sessionSet('accountName', $userinfo->username);
+				$this->_sessionSet('accountID', $userinfo->id);
+				$this->_sessionSet('accountName', $userinfo->username);
 				if(isset($getPost['reme'])) {
 					$random = $this->generateRandom($userinfo->username);
+					list($identifier, $token, $timeout) = explode(':', $random);
+					// $this->_cookiesSet('auth', "$identifier:$token", $timeout);
+					setcookie('auth', "$identifier:$token", $timeout);
 					$this->adminModel->updateRandom($userinfo->id . ':' . $random);
-					exit(json_encode(['status' => 1, 'msg' => $this->_cookiesGet('accountID')]));
+					exit(json_encode(['status' => 1, 'msg' => $_COOKIE['auth'] . '--' . $random]));
 				}
 				exit(json_encode(['status' => 1, 'msg' => '登陆成功']));
 			} else {
@@ -78,8 +80,6 @@ class AccessController extends \app\common\CController {
 			$identifier = md5(Yii::$app->params['salt'] . md5($username . Yii::$app->params['salt']));
 			$token = md5(uniqid(rand(), TRUE));
 			$timeout = time() + 60 * 60 * 24 * 7;
-				 
-			$this->_cookiesSet('auth', "$identifier:$token", $timeout);  
 
 			return "$identifier:$token:$timeout";
     	}
