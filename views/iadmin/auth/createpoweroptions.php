@@ -41,7 +41,7 @@
 
                                         <?= $form->field($model, 'pid',[
                                             'template' => '<div class="control-group">{label}<div class="controls">{input}{error}</div></div>',
-                                        ])->dropDownList($groupList, [/*'prompt'=>'',*/'class' => 'selectError'])->label('上级菜单<span class="required">*</span>') ?>
+                                        ])->dropDownList($groupList, ['class' => 'selectError'])->label('上级菜单<span class="required">*</span>') ?>
 
                                         <?= $form->field($model, 'sort',[
                                             'template' => '<div class="control-group">{label}<div class="controls">{input}{error}</div></div>',

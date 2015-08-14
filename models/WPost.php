@@ -100,4 +100,8 @@ class WPost extends \app\models\BaseModel
     public function getRealUrl($code) {
         return self::find()->select('url')->where('url_code="' . $code . '"')->one();
     }
+
+    public static function hasPost($id) {
+        return self::find()->where('id=' . $id)->count('id');
+    }
 }

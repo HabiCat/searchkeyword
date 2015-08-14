@@ -38,7 +38,7 @@ class WAdmin extends \app\models\BaseModel {
             [['username', 'password', 'repassword', 'group_id'], 'required'],
             ['username', 'unique', 'message' => '此用户名已被使用'],  
             [['repassword'], 'compare', 'compareAttribute' => 'password', 'operator' => '==', 'skipOnEmpty' => true],
-            ['email', 'match', 'pattern' => '/^([0-9A-Za-z\\-_\\.]+)@([0-9a-z]+\\.[a-z]{2,3}(\\.[a-z]{2})?)$/i', 'message' => '邮箱格式不正确'],
+            ['email', 'match', 'pattern' => '/^[0-9a-zA-Z]+@(([0-9a-zA-Z]+)[.])+[a-z]{2,4}$/', 'message' => '邮箱格式不正确'],
             ['mobile', 'match', 'pattern' => '/^13[\d]{9}$|14^[0-9]\d{8}|^15[0-9]\d{8}$|^18[0-9]\d{8}$/', 'message' => '手机号码格式不正确'],
         ];
     }
@@ -81,8 +81,11 @@ class WAdmin extends \app\models\BaseModel {
             $this->password = md5($this->password);
         }
 
-        $this->create_time = time();
-        $this->last_login_time = time();
+        if(!$this->id) {
+            $this->create_time = time();
+            $this->last_login_time = time();
+        }
+        
         return true;
     }
 

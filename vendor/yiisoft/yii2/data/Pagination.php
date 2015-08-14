@@ -172,6 +172,8 @@ class Pagination extends Object implements Linkable
                 $page = $_GET[$this->pageParam] - 1;
             } elseif(isset($_POST[$this->pageParam]) && $_POST[$this->pageParam]) {
                 $page = $_POST[$this->pageParam] - 1;
+            } else {
+                $page = 1;
             }
             // $page = (int) $this->getQueryParam($this->pageParam, 1) - 1;
             $this->setPage($page, true);

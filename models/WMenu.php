@@ -129,7 +129,7 @@ class WMenu extends \app\models\BaseModel
     public function getMenuArray($start, $pageSize, $where) {
         $connection = Yii::$app->db;
         $sqlOne = 'select * from ' . self::tableName() . ' where ' . $where . ' order by sort asc, id asc limit '. $start . ',' . $pageSize;
-        $res = $connection->createCommand($sqlOne)->queryAll();
+        $res = $connection->createCommand($sqlOne)->queryAll();print_r($res);
         $res = $this->getMenuListOptions($res);
         
         $sqlTwo = 'select count(id) as n from ' . self::tableName() . ' where ' . $where;

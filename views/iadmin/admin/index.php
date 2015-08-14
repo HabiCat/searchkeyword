@@ -57,13 +57,42 @@
                                                 <td><?php echo $value['group_name'] ?></td>
                                                 <td class="center"><?php echo $value['last_login_time'] ?></td>
                                                 <td class="center">
+                                                    <?php if($value['id'] != 1): ?>
                                                     <a href="<?php echo Yii::$app->urlManager->createUrl(['iadmin/admin/edit', 'id' => $value['id']]) ?>">编辑</a>
                                                     <a href="<?php echo Yii::$app->urlManager->createUrl(['iadmin/admin/delete', 'id' => $value['id']]) ?>">删除</a>
+                                                    <?php else: ?>
+                                                    <?php if($_SESSION['accountID'] == 1): ?>
+                                                    <a href="<?php echo Yii::$app->urlManager->createUrl(['iadmin/admin/edit', 'id' => $value['id']]) ?>">编辑</a>
+                                                    <?php endif; ?>
+                                                    <?php endif; ?>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
                                         </tbody>
                                     </table>
+
+                                    <!-- 用户列表 -->
+                                    <script type="text/html" id="adminListTemplate">
+                                        {{each templateData as item i}}
+                                        <tr class="odd gradeX">
+                                            <td><input type="checkbox" name="ids[]" value="{{item.id}}" />&nbsp;&nbsp;{{item.id}}</td>
+                                            <td>{{item.username}}</td>
+                                            <td>{{item.group_name}}</td>
+                                            <td class="center">{{item.last_login_time}}</td>
+                                            <td class="center">
+                                                {{if item.id != 1}}
+                                                <a href="index.php?r=iadmin/admin/edit&id={{item.id}}">编辑</a>
+                                                <a href="index.php?r=iadmin/admin/delete&id={{item.id}}">删除</a>
+                                                {{else}}
+                                                    {{if curUserId == 1}}
+                                                    <a href="index.php?r=iadmin/admin/edit&id={{item.id}}">编辑</a>
+                                                    {{/if}}
+                                                {{/if}}
+                                            </td>
+                                        </tr>                                            
+                                        {{/each}}
+                                    </script>
+
                                     <input type="hidden" name="searchNameHidden" id="searchNameHidden" value="" />
                                     <input type="hidden" name="pageSizeHidden" id="pageSizeHidden" value="" />
                                     
@@ -91,8 +120,15 @@
             </div>
         
         <script src="/static/iadmin/assets/DT_bootstrap.js"></script>
+
         <script type="text/javascript">
-        $(function () {
+
+            function getAdminListTemplate(jsonStr) {
+                var adminRowHtml = template('adminListTemplate',{'templateData':jsonStr['datalist'], 'curUserId':<?= $_SESSION['accountID'] ?>});
+                $('#datalist').html(adminRowHtml);
+                $('#pager').html(jsonStr['pager']);               
+            }
+
             $('#all').on('click', function() {
                 if($(this).prop('checked')) {
                     $('input[type="checkbox"]:not(input[name="all"])').prop('checked', true);  
@@ -106,9 +142,7 @@
                 if(($(this).attr('data-page') + 1)) {
                     $.post('index.php?r=iadmin/admin/index', {'search_name': $('#searchNameHidden').val(), 'page': parseInt($(this).attr('data-page')) + 1}, function (jsonStr) {
                         var jsonStr = $.parseJSON(jsonStr);
-
-                        $('#datalist').html(jsonStr['datalist']);
-                        $('#pager').html(jsonStr['pager']);
+                        getAdminListTemplate(jsonStr);
                     });
                 }
                 return false;
@@ -120,9 +154,7 @@
                 if($('#searchName').val()) {
                     $.post('index.php?r=iadmin/admin/index', {'searchName': $('#searchName').val(), 'pageSize': $('#pageSizeHidden').val()}, function (jsonStr) {
                         var jsonStr = $.parseJSON(jsonStr);
-
-                        $('#datalist').html(jsonStr['datalist']);
-                        $('#pager').html(jsonStr['pager']);
+                        getAdminListTemplate(jsonStr);
                     });
                 } else {
                     alert('请输入用户名');
@@ -134,11 +166,9 @@
                 if($(this).val()) {  
                     $.post('index.php?r=iadmin/admin/index', {'searchName': $('#searchNameHidden').val(), 'pageSize': $(this).val(), 'page': $('.active').find('a').attr('data-page')}, function (jsonStr) {
                         var jsonStr = $.parseJSON(jsonStr);
-
-                        $('#datalist').html(jsonStr['datalist']);
-                        $('#pager').html(jsonStr['pager']);
+                        getAdminListTemplate(jsonStr);
                     });                
                 }
             });
-        });
+
         </script>

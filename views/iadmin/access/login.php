@@ -45,11 +45,10 @@
               // alert(jsonStr);
               var jsonStr = $.parseJSON(jsonStr);
 
-              if(jsonStr['status']) {
+              if(jsonStr['status'] < 0) {
                 alert(jsonStr['msg']);
               } else {
                 alert(jsonStr['msg']);
-                  alert('1');
                 window.location.href = '<?= \Yii::$app->urlManager->createUrl("iadmin/admin/index") ?>';
               }
           });

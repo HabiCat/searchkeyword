@@ -1,11 +1,11 @@
 <section>
 
 	<div class="post-content">
-		<?php 
+        <?php 
             $form = \yii\widgets\ActiveForm::begin([
                 'id' => 'postCreateForm',
             ]);
-		?>
+        ?>
 
         <?= $form->field($model, 'subject',[
             'template' => '<div class="control-group">{label}<div class="controls">{input}{error}</div></div>',
@@ -23,9 +23,9 @@
         <?= \yii\helpers\Html::hiddenInput('id', $id) ;?>
         <?= \yii\helpers\Html::button('提交', ['class'=> 'btn btn-primary', 'id' => 'postBtn']) ;?>
 
-		<?php \yii\widgets\ActiveForm::end(); ?>
+        <?php \yii\widgets\ActiveForm::end(); ?>
 	</div>
-<script src="/static/iadmin/vendors/jquery-1.9.1.min.js"></script>
+<script src="../static/iadmin/vendors/jquery-1.9.1.min.js"></script>
     <script type="text/javascript">
     $(function () {
         $('#postBtn').on('click', function() {

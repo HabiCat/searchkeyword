@@ -51,7 +51,7 @@
                                         ])->textInput(['class' => 'input-xlarge focused'])->label('手机号码') ?>
 
                                         <div class="form-actions">
-                                        <?= \yii\helpers\Html::hiddenInput('WAdmin[id]', $model->id) ;?>
+                                        <?= \yii\helpers\Html::hiddenInput('id', $model->id) ;?>
                                         <?= \yii\helpers\Html::submitButton('提交', ['class'=> 'btn btn-primary']) ;?>
                                         <?= \yii\helpers\Html::resetButton('取消', ['class'=> 'btn']) ;?>
 

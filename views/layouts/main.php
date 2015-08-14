@@ -17,6 +17,7 @@
             <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
         <![endif]-->
         <script src="/static/iadmin/vendors/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+        <script src="/static/js/artTemplate.js" type="text/javascript"></script>
     </head>
 <body>
 
