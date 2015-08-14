@@ -8,24 +8,6 @@ class ToolsController extends \app\common\AdminBaseController {
 
 	public function actionUploadDict() {
 		$sougouDir = Yii::$app->params['sougouDictDir'];
-		if(Yii::$app->request->isPost) {
-			ini_set('upload_tmp_dir', ROOT_PATH . '/upload/upload_tmp_dir/');
-			$upload = new \app\common\UploadFile();
-			$upload->allowExts = array('scel');
-			$upload->autoSub = true;
-			$upload->subType = 'date';
-			$upload->saveRule = '';
-			$upload->savePath = $sougouDir . '/';
-
-        	if ( ! $upload->upload() ) {
-            	exit('{"jsonrpc" : "2.0","error" : {"code": 102, "message": "' . $upload->getErrorMsg() . '"}, "id" : "id"}');
-            } else {
-            	// file_put_contents($sougouDir . '/lasttime.tmp', time());
-            	exit('{"jsonrpc" : "2.0", "result" : null, "id" : "id"}');
-            }
-		}
-
-		
 		$dictFiles = array();
 		if(file_exists($sougouDir)) {
 			if(is_writable($sougouDir)) {
@@ -60,8 +42,7 @@ class ToolsController extends \app\common\AdminBaseController {
 
 		$data = array();	
 		if($count) {
-			$end = min(($page - 1) + $pageSize, $count);
-			$sArr = array_slice($dictFiles, $start, $end, true);
+			$sArr = array_slice($dictFiles, $start, $pageSize, true);
 
 			foreach($sArr as $time => $value) {
 				if(!empty($value)) {
@@ -92,6 +73,24 @@ class ToolsController extends \app\common\AdminBaseController {
 			'pager' => $pager,
 		));
 	}	
+
+	public function actionUploaded() {
+		$sougouDir = Yii::$app->params['sougouDictDir'];
+		ini_set('upload_tmp_dir', ROOT_PATH . '/upload/upload_tmp_dir/');
+		$upload = new \app\common\UploadFile();
+		$upload->allowExts = array('scel');
+		$upload->autoSub = true;
+		$upload->subType = 'date';
+		$upload->saveRule = '';
+		$upload->savePath = $sougouDir . '/';
+
+    	if ( ! $upload->upload() ) {
+        	exit('{"jsonrpc" : "2.0","error" : {"code": 102, "message": "' . $upload->getErrorMsg() . '"}, "id" : "id"}');
+        } else {
+        	// file_put_contents($sougouDir . '/lasttime.tmp', time());
+        	exit('{"jsonrpc" : "2.0", "result" : null, "id" : "id"}');
+        }	
+	}
 
 	public function actionDeleteDict() {
 		if(\Yii::$app->request->isGet) {
