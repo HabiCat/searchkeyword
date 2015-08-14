@@ -40,6 +40,7 @@ class PostController extends \app\common\CController {
 		$this->esClient->index($params);	
 	}
 	public function actionIndex() {
+
 		// $getPost = $this->_getPost('WPost');
 		// $page = $this->_getPost('page') ? $this->_getPost('page') : 1;
 		// $keywords = strip_tags($getPost['searchName']);
@@ -63,7 +64,7 @@ class PostController extends \app\common\CController {
 		$this->cl->SetLimits($start, $pageSize);
 		$this->cl->SetFilterRange('createtime', 1, time());
 		$res = $this->cl->Query($keywords, "post,post_increment");
-		$this->dump($res);
+
 		$ids = array();
 		$where = '';
 		if(isset($res['matches'])) {
@@ -175,32 +176,33 @@ class PostController extends \app\common\CController {
 	}
 
 	public function actionUpdate() {
-		$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
-		$postModel = $id ? \app\models\WPost::findOne($id) : '';
-
-		if(Yii::$app->request->isPost) {
-			if($id) {
-				$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
+		if(Yii::$app->request->isPost) {			
+			$id = isset($_POST['id']) ? $_POST['id'] : '';
+			$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
+			if($id && \app\models\WPost::hasPost($id)) {
+				$postModel = \app\models\WPost::findOne($id);
 				$getPost['id'] = $id;
 				$postModel->attributes = $getPost;
 				if($postModel->save()) {
 					exit(json_encode(['status' => 1, 'msg' => '修改成功']));
 				} else {
 					exit(json_encode(['status' => -1, 'msg' => $postModel->getErrors()]));
-				}			
+				}					
+			} else {
+				exit(json_encode(['status' => -1, 'msg' => '无此记录']));
 			}
-
+		
 		}
 
-		if($id) {
+		$id = isset($_GET['id']) ? $_GET['id'] : '';
+		if($id && \app\models\WPost::hasPost($id)) {
 			return $this->render('update', [
 				'model' => $postModel,
 				'id' => $id,
-			]);			
+			]);					
 		} else {
 			exit('此记录不存在');
 		}
-
 	}
 
 	public function actionDelete() {
