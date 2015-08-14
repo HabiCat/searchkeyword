@@ -164,23 +164,34 @@ class AuthController extends AdminBaseController {
 		$menuModel = new \app\models\WMenu;
 		$currentPage = $this->_getPost('page') ? $this->_getPost('page') : 1;
 		$pageSize = $this->_getPost('pageSize') ? $this->_getPost('pageSize') : 10;
+		// $currentPage = isset($_REQUEST['page']) ? $_REQUEST['page'] : 1;
 
-		$where = '1';
+		$where = 1;
 		if($this->_getPost('searchName')) {
-			$where .= ' and ' . $this->buildQuery(['menu_title' => $this->_getPost('searchName')], 'and');
+			$where = ' and ' . $this->buildQuery(['menu_title' => $this->_getPost('searchName')], 'and');
 		}
 
-		$data = $menuModel->getMenuArray(($currentPage - 1) * $pageSize, $pageSize, $where);
-
-		$pager = new \yii\data\Pagination(array('defaultPageSize' => $pageSize,'totalCount' => $data['count']['n']));
+		//$data = $menuModel->getMenuArray(($currentPage - 1) * $pageSize, $pageSize, $where);
+		$filterMenus = $menuModel->getMenuListOptions($menuModel->getAllMenus($where));
+		$count = count($filterMenus);
+		$data = array();
+		if(!empty($filterMenus)) {
+			$start = ($currentPage - 1) * $pageSize;
+			$end = min(($currentPage - 1) + $pageSize, count($filterMenus));
+			for($i = $start; $i < $end; $i++) {
+				$data[$i] = $filterMenus[$i];
+			}
+		}
+		
+		$pager = new \yii\data\Pagination(array('defaultPageSize' => $pageSize,'totalCount' => $count));
 		if(\Yii::$app->request->isGet) {
 			return $this->render('indexpoweroptions', array(
-				'datalist' => $data['data'],
+				'datalist' => $data,
 				'pager' => $pager,
 			));
 		} else {
 			$html = '';
-			foreach($data['data'] as $value) {
+			foreach($data as $value) {
                 $html .= '<tr class="odd gradeX">';
                 $html .= '<td><input type="checkbox" name="ids[]" value="' . $value['id'] . '" />&nbsp;&nbsp;' . $value['id'] . '</td>';
                 $html .= '<td>' . $value['menu_title'] . '</td>';
@@ -208,7 +219,7 @@ class AuthController extends AdminBaseController {
 		if(\Yii::$app->request->isPost) {
 			$backUrl = \Yii::$app->urlManager->createUrl('iadmin/auth/create-power-options');
 			$getPost = $this->_getPost('WMenu');
-			if($this->isTwoLayersOfSuper($getPost['pid']) > 1) {
+			if($this->isTwoLayersOfSuper($getPost['pid']) > 1 && $getPost['type'] == 0) {
 				\app\common\XUtils::message('error', '暂不支持添加三级及以上菜单！', $backUrl);
 			}
 
@@ -220,33 +231,60 @@ class AuthController extends AdminBaseController {
 		}
 
 		$groupList = $this->menusDropDownList($menuModel);
-		array_unshift($groupList, '顶级分类');
+		$keys = array_keys($groupList);
+		$keys = array_merge(array(0), $keys);
+
+		$values = array_values($groupList);
+		$values = array_merge(array('顶级分类'), $values);
+
+		$tmpList = array();
+		foreach($keys as $k => $v) {
+			$tmpList[$v] = $values[$k];
+		}
+
 		return $this->render('createpoweroptions', [
 			'model' => $menuModel,
-			'groupList' => $groupList,
+			'groupList' => $tmpList,
 		]);
 	}
 
 	public function actionEditPowerOptions() {
-		$id = $this->_getParam('id');
+		$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
 		$menuModel = \app\models\WMenu::findOne($id);
 
-		if(\Yii::$app->request->isPost) {
-			$getPost = $this->_getPost('WMenu');
-			if($getPost['id']) {
-				if($this->buildUpdate($getPost['id'], $menuModel, $getPost)) {
-					\app\common\XUtils::message('success', '菜单更新成功！', \Yii::$app->urlManager->createUrl(['iadmin/auth/edit-power-options', 'id' => $id]));
-				}
-			}	
-		}
+		if($menuModel) {
+			if(\Yii::$app->request->isPost) {
+				$getPost = $this->_getPost('WMenu');
+				if($getPost['id']) {
+					if($this->parentTrue($getPost['id'], $getPost['pid'])) {
+						if($this->isTwoLayersOfSuper($getPost['pid']) > 1) {
+							\app\common\XUtils::message('error', '暂不支持添加三级及以上菜单！', \Yii::$app->urlManager->createUrl(['iadmin/auth/edit-power-options', 'id' => $id]));
+						}
 
+						if($this->buildUpdate($getPost['id'], $menuModel, $getPost)) {
+							\app\common\XUtils::message('success', '菜单更新成功！', \Yii::$app->urlManager->createUrl(['iadmin/auth/edit-power-options', 'id' => $id]));
+						}
+					} else {
+						\app\common\XUtils::message('error', '不能选择当前菜单或当前菜单下级菜单', \Yii::$app->urlManager->createUrl(['iadmin/auth/edit-power-options', 'id' => $id]));
+					}
+				}	
+			}
 
-		if($menuModel->isExist(['id' => $id], 'id')) {
 			$groupList = $this->menusDropDownList($menuModel);
-			array_unshift($groupList, '顶级分类');
+			$keys = array_keys($groupList);
+			$keys = array_merge(array(0), $keys);
+
+			$values = array_values($groupList);
+			$values = array_merge(array('顶级分类'), $values);
+
+			$tmpList = array();
+			foreach($keys as $k => $v) {
+				$tmpList[$v] = $values[$k];
+			}
+
 			return $this->render('editpoweroptions', [
 				'model' => $menuModel,
-				'groupList' => $groupList,
+				'groupList' => $tmpList,
 			]);				
 		}
 
@@ -258,11 +296,11 @@ class AuthController extends AdminBaseController {
 	 * @return [type] [description]
 	 */
 	public function actionDeletePowerOptions() {
-		$adminModel = new \app\models\WAdmin;
+		$menuModel = new \app\models\WMenu;
 		$backUrl = \Yii::$app->urlManager->createUrl('iadmin/auth/index-power-options');
 		if(\Yii::$app->request->isGet) {
 			$ids = $this->_getParam('id');
-			if(!$adminModel->isExist(['id' => $ids], 'id')) {
+			if(!$menuModel->isExist(['id' => $ids], 'id')) {
 				$this->redirect($backUrl);
 			}
 
@@ -271,8 +309,14 @@ class AuthController extends AdminBaseController {
 			$ids = implode(',', $ids);
 		}
 
-		if($adminModel->deleteRecord('id in (' . $ids .')')) {
-			\app\common\XUtils::message('success', '用户信息删除成功！', $backUrl);
+		foreach((array) $ids as $key => $val) {
+			$subCatalogArray = $menuModel->getMenuListOptions($menuModel->getAllMenus('type <> 1'), $val);
+			if(!empty($subCatalogArray)) 
+				\app\common\XUtils::message('error', 'ID为' . $val . '有下级菜单，不能删除', $backUrl);
+		}
+
+		if($menuModel->deleteRecord('id in (' . $ids .')')) {
+			\app\common\XUtils::message('success', '菜单信息删除成功！', $backUrl);
 		} 
 
 		\app\common\XUtils::message('error', '用户信息删除失败，请重试！', $backUrl);
@@ -289,4 +333,25 @@ class AuthController extends AdminBaseController {
 	}
 
 
+	public function parentTrue($id, $parentId) {
+		$menuModel = new \app\models\WMenu;
+		$subCatalogArray = $menuModel->getMenuListOptions($menuModel->getAllMenus('type <> 1'), $id);
+
+		$parentArray = array();
+		if($id == $parentId) {
+			$parentArray[] = $parentId;
+		} else {
+			if(!empty($subCatalogArray)) {
+				foreach($subCatalogArray as $key => $val) {
+					$parentArray[] = $val['id'];
+				}				
+			}
+		} 
+
+		if(in_array($parentId, $parentArray)) {
+			return false;
+		}
+
+		return true;
+	}
 }

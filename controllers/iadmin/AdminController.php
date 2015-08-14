@@ -39,26 +39,11 @@ class AdminController extends AdminBaseController {
 				'pager' => $pager,
 			));
 		} else {
-			$html = '';
-			foreach($data['data'] as $value) {
-                $html .= '<tr class="odd gradeX">';
-                $html .= '<td><input type="checkbox" name="ids[]" value="' . $value['id'] . '" />&nbsp;&nbsp;' . $value['id'] . '</td>';
-                $html .= '<td>' . $value['username'] . '</td>';
-                $html .= '<td>' . $value['group_name'] . '</td>';
-                $html .= '<td class="center">' . $value['last_login_time'] . '</td>';
-                $html .= '<td class="center">';
-                $html .= '<a href="' . \Yii::$app->urlManager->createUrl(['iadmin/admin/edit','id' => $value['id']]) . '">编辑</a>';
-                $html .= '<a href="' . \Yii::$app->urlManager->createUrl(['iadmin/admin/delete', 'id' => $value['id']]) . '">删除</a>';
-                $html .= '</td> '; 
-			}
-
-			$pages = \yii\widgets\LinkPager::widget([
+			exit(json_encode(array('datalist' => $data['data'], 'pager' => \yii\widgets\LinkPager::widget([
                 'pagination' => $pager,
                 'prevPageLabel' => '上一页',
                 'nextPageLabel' => '下一页',
-            ]);
-
-			exit(json_encode(array('datalist' => $html, 'pager' => $pages)));
+            ]))));
 		}
 	}
 
@@ -88,23 +73,25 @@ class AdminController extends AdminBaseController {
 	 * @return [type] [description]
 	 */
 	public function actionEdit() {
-		$aid = $this->_getParam('id');
+		$aid = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
 		$adminModel = \app\models\WAdmin::findOne($aid);
 		$adminGroupModel = new \app\models\WAdminGroup;
+		if($adminModel) {
+			if($_SESSION['accountID'] != 1 && $aid == 1) {
+				\app\common\XUtils::message('error', '无权修改', \Yii::$app->urlManager->createUrl(['iadmin/admin/index']));
+			}
 
-		if(\Yii::$app->request->isPost) {
-			$getPost = $this->_getPost('WAdmin');
-			if($getPost['id']) {
+			if(\Yii::$app->request->isPost) {
+				$getPost = $this->_getPost('WAdmin');
+				$getPost['id'] = $aid;
 				$filterData = $adminModel->writeDataValidate($getPost);
 				if(!empty($filterData)) {
 					if($adminModel->updateAdminInfo($filterData)) {
 						\app\common\XUtils::message('success', '用户信息更新成功！', \Yii::$app->urlManager->createUrl(['iadmin/admin/edit', 'id' => $aid]));
 					}
 				}
-			}	
-		}
-
-		if($adminModel->isExist(['id' => $aid], 'id')) {
+			}
+		
 			$data = $adminModel->getSingleAdminInfoByID($aid);
 			$adminModel->password = '';
 			if(!empty($data)) {
@@ -112,8 +99,9 @@ class AdminController extends AdminBaseController {
 					'model' => $adminModel,
 					'groupList' => $adminGroupModel->getDropDownList($adminGroupModel->getBaseAdminGroupList()),
 				]);				
-			}
+			}		
 		}
+		\app\common\XUtils::message('error', '用户不存在', \Yii::$app->urlManager->createUrl(['iadmin/admin/index']));
 	}
 
 	/**
@@ -134,6 +122,9 @@ class AdminController extends AdminBaseController {
 			$ids = implode(',', $ids);
 		}
 
+		if(in_array(1, (array) $ids)) {
+			\app\common\XUtils::message('error', '超级管理员不能被删除', $backUrl);
+		}
 		
 		if($adminModel->deleteRecord('id in (' . $ids .')')) {
 			\app\common\XUtils::message('success', '用户信息删除成功！', $backUrl);

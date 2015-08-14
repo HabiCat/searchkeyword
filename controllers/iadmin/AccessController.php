@@ -47,7 +47,7 @@ class AccessController extends \app\common\CController {
 					// $this->_cookiesSet('auth', "$identifier:$token", $timeout);
 					setcookie('auth', "$identifier:$token", $timeout);
 					$this->adminModel->updateRandom($userinfo->id . ':' . $random);
-					exit(json_encode(['status' => 1, 'msg' => $_COOKIE['auth'] . '--' . $random]));
+					// exit(json_encode(['status' => 1, 'msg' => $_COOKIE['auth'] . '--' . $random]));
 				}
 				exit(json_encode(['status' => 1, 'msg' => '登陆成功']));
 			} else {
