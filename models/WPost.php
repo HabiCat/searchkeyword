@@ -42,7 +42,13 @@ class WPost extends \app\models\BaseModel
     }
 
     public function keywords_validation($attribute, $params){
+        $censor = new \app\common\DCensor();
+        if($censor->check($this->$attribute)) {
+            $this->addError($attribute, '关键词中有敏感信息');
+        }
+        
         $keywordsExp = explode(',', $this->$attribute);
+
         if(count($keywordsExp) > 7) {
             $this->addError($attribute, '关键词不能超过7个');
         } else {
