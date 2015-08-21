@@ -5,52 +5,12 @@ use Yii;
 use app\common\DCensor;
 
 class PostController extends \app\common\CController {
-	// public $esClient;
-	// public $index = 'word';
-	// public $type = 'post_3';
-	public $cl;
-
-	public function init() {
-		// require_once(ROOT_PATH . '/api/sphinxapi.php');
-		// require_once(ROOT_PATH . '/api/elasticsearch-php/vendor/autoload.php'); 
-		// $this->createEsClient('localhost', 9200);
-		require_once(ROOT_PATH . '/api/SphinxClient.php');
-		$this->cl = new \api\SphinxClient();
-		$this->cl->SetServer ('127.0.0.1', 9312);
-	}
-
-	// public function createEsClient($host, $port) {
-	// 	$this->esClient = new \Elasticsearch\Client();  // ['hosts' => $host . ':' . $port]
-	// }
-
-	public function createIndex($index, $type, $fields) {
-		$params = array();
-		// $params['body'] = [
-		// 	'id' => $id,
-		// 	'subject' => $value->subject,
-		// 	'keywords' => $value->keywords,
-		// 	'url_code' => $value->url_code,
-		// ];
-
-		foreach($fields as $key => $val) {
-			$params['body'][$key] = $val;
-		}
-		$params['index'] = $index;
-		$params['type'] = $type;
-		// $params['id'] = $key;
-		$this->esClient->index($params);	
-	}
-
 	public function actionIndex() {
 
 		$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
 		$page = isset($_POST['page']) ? ($_POST['page'] ? $_POST['page'] : 1) : 1;
 		$keywords = '';
 		isset($getPost['searchName']) && $keywords = strip_tags($getPost['searchName']);
-		//$getPost = isset($_GET['WPost']) ? $_GET['WPost'] : '';
-		// $page = isset($_GET['page']) ? ($_GET['page'] ? $_GET['page'] : 1) : 1;
-		// $keywords = '';
-		// isset($_GET['searchName']) && $keywords = strip_tags($_GET['searchName']);print_r($keywords);
 		$pageSize = 10;
 		$start = ($page - 1) * $pageSize;
 		$postModel = new \app\models\WPost;
@@ -161,27 +121,6 @@ class PostController extends \app\common\CController {
 			}
 		}
 	}
-
-	// public function actionUpdate() {
-	// 	$id = isset($_GET['id']) ? $_GET['id'] : 0;
-
-	// 	if(Yii::$app->request->isPost) {
-	// 		$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
-	// 		// $postModel->attributes =  $this->_getPost('WPost');
-	// 		$postModel->attributes = $getPost;
-	// 		if($postModel->save()) {					
-	// 			// $this->esClient->bulk($params);	
-	// 			exit(json_encode(['status' => 1, 'msg' => '修改成功']));
-	// 		}
-	// 	}
-	// 	if($id) {
-	// 		$postModel = \app\models\WPost::findOne($id);
-
-	// 		return $this->render('create', [
-	// 			'model' => $postModel,
-	// 		]);			
-	// 	}
-	// }
 	
 	public function actionJumpUrl() {
 		$encodeUrl = isset($_GET['url']) ? $_GET['url'] : '';
