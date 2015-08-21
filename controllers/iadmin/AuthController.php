@@ -78,22 +78,18 @@ class AuthController extends AdminBaseController {
 	public function actionEdit() {
 		$gid = $this->_getParam('id');
 		$adminGroupModel = \app\models\WAdminGroup::findOne($gid);
-
-		if(\Yii::$app->request->isPost) {
-			$getPost = $this->_getPost('WAdminGroup');
-			if($getPost['id']) {
+		if($adminGroupModel) {
+			if(\Yii::$app->request->isPost) {
+				$getPost = $this->_getPost('WAdminGroup');
 				if($this->buildInsert($adminGroupModel, $getPost)) {
 					\app\common\XUtils::message('success', '用户组更新成功！', \Yii::$app->urlManager->createUrl(['iadmin/auth/edit', 'id' => $id]));
 				}
-			}	
-		}
+			}
 
-		if($adminGroupModel->isExist(['id' => $gid], 'id')) {
 			return $this->render('edit', [
 				'model' => $adminGroupModel,
 			]);				
 		}
-
 		\app\models\XUtils::message('error', '无此用户组信息', \Yii::$app->urlManager->createUrl('iadmin/auth/index'));
 	}
 
