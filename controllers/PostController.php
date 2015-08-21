@@ -5,8 +5,15 @@ use Yii;
 use app\common\DCensor;
 
 class PostController extends \app\common\CController {
-	public function actionIndex() {
+	public $cl;
 
+	public function init() {
+		require_once(ROOT_PATH . '/api/SphinxClient.php');
+		$this->cl = new \api\SphinxClient();
+		$this->cl->SetServer ('127.0.0.1', 9312);
+	}
+
+	public function actionIndex() {
 		$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
 		$page = isset($_POST['page']) ? ($_POST['page'] ? $_POST['page'] : 1) : 1;
 		$keywords = '';
