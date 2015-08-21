@@ -34,7 +34,6 @@
                     window.location.reload();
                 } else {
                     for(var i in jsonStr['msg']) {
-                        alert($('#WPost[' + i + ']').next());
                         $('#' + i).next().html(jsonStr['msg'][i][0]);
                     }                  
                 }

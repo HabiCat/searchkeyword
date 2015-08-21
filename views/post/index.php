@@ -4,6 +4,8 @@
 		.pager li { float: left; padding: 5px;}
 		.pager .active { }
 		.pager .active a {font-size: 22px; color: red;}
+		.autoSearch { min-height: 24px; }
+		.autoSearch ul, li { padding: 0; margin: 0;}
 	</style>
 	<div class="search">
 		<?php 
@@ -16,7 +18,9 @@
 		
         <?= $form->field($model, 'searchName',[
             'template' => '<div class="control-group">{label}<div class="controls">{input}{error}</div></div>',
-        ])->textInput(['class' => 'input-xlarge focused','value' => $searchName])->label('关键字<span class="required">*</span>') ?>
+        ])->textInput(['class' => 'input-xlarge focused', 'id' => 'searchInput','value' => $searchName])->label('关键字<span class="required">*</span>') ?>
+
+        <div class="autoSearch" id="autoSearch"></div>
 
 		<?= \yii\helpers\Html::submitButton('搜索', ['class'=> 'btn btn-primary']) ;?>
 
@@ -66,6 +70,15 @@
 
 			return false;
 		});
+
+		$('#autoSearch').css({'width':$('#searchInput').width()+4});
+		$('#searchInput').keyup(function () {
+			$('#autoSearch').html('<ul><li>111111</li><li>222222</li></ul>');
+		});
+
+		// $('body').click(function () {
+		// 	$('#autoSearch').css({'display': 'none'});
+		// });
 	}); 
 	</script>
 </section>
