@@ -10,13 +10,13 @@
                         <!-- block -->
                         <div class="block">
                             <div class="navbar navbar-inner block-header">
-                                <div class="muted pull-left">后台用户组管理列表</div>
+                                <div class="muted pull-left">后台菜单管理列表</div>
                             </div>
                             <div class="block-content collapse in">
                                 <div class="span12">
                                    <div class="table-toolbar">
                                       <div class="btn-group">
-                                         <a href="<?php echo Yii::$app->urlManager->createUrl('iadmin/auth/create-power-options') ?>"><button class="btn btn-success">添加用户组<i class="icon-plus icon-white"></i></button></a>
+                                         <a href="<?php echo Yii::$app->urlManager->createUrl('iadmin/auth/create-power-options') ?>"><button class="btn btn-success">添加菜单<i class="icon-plus icon-white"></i></button></a>
                                       </div>
                                    </div>
                                     <div class="row">
