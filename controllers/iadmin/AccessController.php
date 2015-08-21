@@ -22,38 +22,36 @@ class AccessController extends \app\common\CController {
 			if(!empty($getPost)) {
 				if(!trim($getPost['username'])) {
 					exit(json_encode(['status' => -1, 'msg' => '请填写用户名']));
-				} 
-				if(!trim($getPost['password'])) {
+				} elseif(!trim($getPost['password'])) {
 					exit(json_encode(['status' => -1, 'msg' => '请填写密码']));
-				}
-				if(!trim($getPost['verifycode'])) {
+				}elseif(!trim($getPost['verifycode'])) {
 					exit(json_encode(['status' => -1, 'msg' => '请填写验证码']));	
+				} else {
+					if($this->_sessionGet('__captcha/site/captcha') != $getPost['verifycode']) {
+						exit(json_encode(['status' => -1, 'msg' => '验证码错误']));
+					}
+
+					$userinfo = $this->adminModel->getSingleAdminInfo(['username' => $getPost['username'], 'password' => md5($getPost['password'])]);
+					if(!empty($userinfo)) {
+						$this->_sessionSet('accountID', $userinfo->id);
+						$this->_sessionSet('accountName', $userinfo->username);
+						if(isset($getPost['reme'])) {
+							$random = $this->generateRandom($userinfo->username);
+							list($identifier, $token, $timeout) = explode(':', $random);
+							// $this->_cookiesSet('auth', "$identifier:$token", $timeout);
+							setcookie('auth', "$identifier:$token", $timeout);
+							$this->adminModel->updateRandom($userinfo->id . ':' . $random);
+							\app\models\WAdmin::updateAll(array('last_login_time' => time()), array('id' => $userinfo->id));
+							// exit(json_encode(['status' => 1, 'msg' => $_COOKIE['auth'] . '--' . $random]));
+						}
+						exit(json_encode(['status' => 1, 'msg' => '登陆成功']));
+					} else {
+						exit(json_encode(['status' => -1, 'msg' => '用户名或密码错误']));
+					}
 				}
 			} else {
 				exit(json_encode(['status' => -1, 'msg' => '请填写登录信息']));
 			}
-
-			if($this->_sessionGet('__captcha/site/captcha') != $getPost['verifycode']) {
-				exit(json_encode(['status' => -1, 'msg' => '验证码错误']));
-			}
-
-			$userinfo = $this->adminModel->getSingleAdminInfo(['username' => $getPost['username'], 'password' => md5($getPost['password'])]);
-			if(!empty($userinfo)) {
-				$this->_sessionSet('accountID', $userinfo->id);
-				$this->_sessionSet('accountName', $userinfo->username);
-				if(isset($getPost['reme'])) {
-					$random = $this->generateRandom($userinfo->username);
-					list($identifier, $token, $timeout) = explode(':', $random);
-					// $this->_cookiesSet('auth', "$identifier:$token", $timeout);
-					setcookie('auth', "$identifier:$token", $timeout);
-					$this->adminModel->updateRandom($userinfo->id . ':' . $random);
-					// exit(json_encode(['status' => 1, 'msg' => $_COOKIE['auth'] . '--' . $random]));
-				}
-				exit(json_encode(['status' => 1, 'msg' => '登陆成功']));
-			} else {
-				exit(json_encode(['status' => -1, 'msg' => '用户名或密码错误']));
-			}
-
 		}
 
 		return $this->renderPartial('login',[
@@ -66,6 +64,8 @@ class AccessController extends \app\common\CController {
         $this->_sessionRemove('accountName');
 
         $this->_session->destroy();
+
+        unset($_COOKIE['auth']);
 
         \app\common\XUtils::message('success', '成功退出', \Yii::$app->urlManager->createUrl(['iadmin/access/login']));
 	}

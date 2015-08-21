@@ -177,10 +177,11 @@ class AuthController extends AdminBaseController {
 		$data = array();
 		if(!empty($filterMenus)) {
 			$start = ($currentPage - 1) * $pageSize;
-			$end = min(($currentPage - 1) + $pageSize, count($filterMenus));
-			for($i = $start; $i < $end; $i++) {
-				$data[$i] = $filterMenus[$i];
-			}
+			// $end = min((($currentPage - 1) * $pageSize) + $pageSize, count($filterMenus));
+			// for($i = $start; $i < $end; $i++) {
+			// 	$data[$i] = $filterMenus[$i];
+			// }
+			$data = array_slice($filterMenus, $start, $pageSize, true);
 		}
 		
 		$pager = new \yii\data\Pagination(array('defaultPageSize' => $pageSize,'totalCount' => $count));

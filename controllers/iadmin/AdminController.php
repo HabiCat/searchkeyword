@@ -94,12 +94,11 @@ class AdminController extends AdminBaseController {
 		
 			$data = $adminModel->getSingleAdminInfoByID($aid);
 			$adminModel->password = '';
-			if(!empty($data)) {
-				return $this->render('edit', [
-					'model' => $adminModel,
-					'groupList' => $adminGroupModel->getDropDownList($adminGroupModel->getBaseAdminGroupList()),
-				]);				
-			}		
+
+			return $this->render('edit', [
+				'model' => $adminModel,
+				'groupList' => $adminGroupModel->getDropDownList($adminGroupModel->getBaseAdminGroupList()),
+			]);					
 		}
 		\app\common\XUtils::message('error', '用户不存在', \Yii::$app->urlManager->createUrl(['iadmin/admin/index']));
 	}
