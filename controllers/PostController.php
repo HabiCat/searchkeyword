@@ -2,6 +2,7 @@
 namespace app\controllers;
 
 use Yii;
+use app\common\DCensor;
 
 class PostController extends \app\common\CController {
 	// public $esClient;
@@ -39,11 +40,9 @@ class PostController extends \app\common\CController {
 		// $params['id'] = $key;
 		$this->esClient->index($params);	
 	}
+
 	public function actionIndex() {
 
-		// $getPost = $this->_getPost('WPost');
-		// $page = $this->_getPost('page') ? $this->_getPost('page') : 1;
-		// $keywords = strip_tags($getPost['searchName']);
 		$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
 		$page = isset($_POST['page']) ? ($_POST['page'] ? $_POST['page'] : 1) : 1;
 		$keywords = '';
@@ -105,65 +104,16 @@ class PostController extends \app\common\CController {
 			'searchName' => $keywords,
 		]);
 	}
-	
-	// public function actionIndex() {
-
-	// 	$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
-	// 	$page = isset($_POST['page']) ? ($_POST['page'] ? $_POST['page'] : 1) : 1;
-	// 	$keywords = '';
-	// 	isset($getPost['searchName']) && $keywords = strip_tags($getPost['searchName']);
-	// 	$pageSize = 10;
-	// 	$start = ($page - 1) * $pageSize;
-	// 	$postModel = new \app\models\WPost;
-	//     $params = array();  
-		
-	// 	$json = '{
-	// 	    "query" : {
-	// 	        "match" : {
-	// 	            "subject" : "' . $keywords . '"
-	// 	        }
-	// 	    },
-	// 	    "highlight" : {
-	// 	        "pre_tags" : ["<tag1>", "<tag2>"],
-	// 	        "post_tags" : ["</tag1>", "</tag2>"],
-	// 	        "fields" : {
-	// 	            "subject" : {}
-	// 	        }
-	// 	    }
-	// 	}';
-	//     $params['index'] = $this->index; 
-	//     $params['type'] = $this->type;      
-	//     $params['body'] = $json;
-	//     $params['from'] = $start;
-	//     $params['size'] = $pageSize;    
-
-	// 	$res = $this->esClient->search($params);
-	// 	$pager = new \yii\data\Pagination(array('defaultPageSize' => $pageSize,'totalCount' => $res['hits']['total']));
-		
-	// 	return $this->render('index', [
-	// 		'model' => $postModel,
-	// 		'data' => $res['hits']['hits'],
-	// 		'pager' => $pager,
-	// 		'searchName' => $keywords,
-	// 	]);
-
-	// }
-
 
 	public function actionCreate() {
 		$postModel = new \app\models\WPost;
 
 		if(Yii::$app->request->isPost) {
 			$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
+			$getPost['keywords'] = preg_replace('/[\'"，“ \|]*/', '', strip_tags($getPost['keywords']));
+
 			$postModel->attributes = $getPost;
 			if($postModel->save()) {
-				// $info = \app\models\WPost::find()->where('id=' . $postModel->id)->one();
-				// $this->createIndex($this->index, $this->type, [
-				// 	'id' => $info->id,
-				// 	'subject' => $info->subject,
-				// 	'keywords' => $info->keywords,
-				// 	'url_code' => $info->url_code,
-				// ]);
 				exit(json_encode(['status' => 1, 'msg' => '添加成功']));
 			} else {
 				exit(json_encode(['status' => -1, 'msg' => $postModel->getErrors()]));
@@ -176,26 +126,20 @@ class PostController extends \app\common\CController {
 	}
 
 	public function actionUpdate() {
-		if(Yii::$app->request->isPost) {			
-			$id = isset($_POST['id']) ? $_POST['id'] : '';
-			$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
-			if($id && \app\models\WPost::hasPost($id)) {
-				$postModel = \app\models\WPost::findOne($id);
+		$id = isset($_REQUEST['id']) ? $_REQUEST['id'] : '';
+		$postModel = \app\models\WPost::findOne($id);
+		if($postModel) {
+			if(Yii::$app->request->isPost) {			
+				$getPost = isset($_POST['WPost']) ? $_POST['WPost'] : '';
 				$getPost['id'] = $id;
 				$postModel->attributes = $getPost;
 				if($postModel->save()) {
 					exit(json_encode(['status' => 1, 'msg' => '修改成功']));
 				} else {
 					exit(json_encode(['status' => -1, 'msg' => $postModel->getErrors()]));
-				}					
-			} else {
-				exit(json_encode(['status' => -1, 'msg' => '无此记录']));
+				}								
 			}
 		
-		}
-
-		$id = isset($_GET['id']) ? $_GET['id'] : '';
-		if($id && \app\models\WPost::hasPost($id)) {
 			return $this->render('update', [
 				'model' => $postModel,
 				'id' => $id,
